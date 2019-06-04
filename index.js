@@ -21,8 +21,6 @@ var passport = require('passport');
 var jwt = require('express-jwt');
 
 
-
-
 require('./models/Posts');
 require('./models/Comments');
 require('./models/Categories');
@@ -107,7 +105,7 @@ var server = app.listen(3000,"0.0.0.0",function () {
 var auth = jwt({secret: '2455645364365676gdfsggfdsgs', userProperty: 'payload'});
 //process.env.DB_SECRET
 
-// Route Parameters ----------------------------------------------------------- 
+// Route Parameters -----------------------------------------------------------
 router.param('post', function(req, res, next, id) {
   var query = Post.findById(id);
   query.exec(function (err, post){
@@ -159,13 +157,13 @@ router.param('user', function(req, res, next, username) {
 
 
 
-// Main Page and Bootstrap with Angular ----------------------------------- 
+// Main Page and Bootstrap with Angular -----------------------------------
 router.get('/', function(req, res, next) {
   res.render('index', { title: 'Forum Home' });
 });
 
 
-// Posts Routes ----------------------------------------------------------- 
+// Posts Routes -----------------------------------------------------------
     // Return All Posts
     router.get('/api/posts/', function(req, res, next) {
         Post.find(function(err, posts){
@@ -182,28 +180,28 @@ router.get('/', function(req, res, next) {
                 user.addpost(user);
                 user.posts.push(post);
         });
-        
+
         post.category = req.category;
-        
+
         post.save(function(err, post){
         if(err) return next(err);
         //attempt to add post into category posts
             req.category.posts.push(post);
             req.category.save(function(err, category) {
-            if(err){ 
-                return next(err); 
+            if(err){
+                return next(err);
             }
             res.json(post);
             });
-        }); 
-    
+        });
+
     });
 
     // Get a single Post
     router.get('/api/posts/:post', function(req, res, next) {
         req.post.addview(function(err, post){
             if (err) { return next(err); }
-        });  
+        });
         req.post.populate('comments', function(err, post) {
             if (err) { return next(err); }
             res.json(post);
@@ -240,7 +238,7 @@ router.get('/', function(req, res, next) {
     });
     // Delete a post
     router.delete('/api/posts/delete/:post', auth, function(req, res) {
-        console.log("Deleting Post with ID: " + req.post._id);  
+        console.log("Deleting Post with ID: " + req.post._id);
         Post.findById(req.post._id)
             .exec(function(err, doc) {
                 if (err || !doc) {
@@ -269,37 +267,37 @@ router.get('/', function(req, res, next) {
             category: req.body.category
         };
         Post.findOneAndUpdate(conditions, update, options, function(err, doc){
-            if (err){return err;} 
+            if (err){return err;}
         });
         // Change Category if needed
         if(oldCategory != req.body.category){
-            Category.findByIdAndUpdate(oldCategory, {$pull : {posts: req.post._id}}, {new:true}, 
+            Category.findByIdAndUpdate(oldCategory, {$pull : {posts: req.post._id}}, {new:true},
                 function(err, model) {
-                    if (err){return err;} 
+                    if (err){return err;}
                 });
-            Category.findByIdAndUpdate(req.body.category, {$push : {posts: req.post._id}},{new:true}, 
+            Category.findByIdAndUpdate(req.body.category, {$push : {posts: req.post._id}},{new:true},
                 function(err, model) {
-                    if (err){return err;} 
-                });         
+                    if (err){return err;}
+                });
         }
-        res.send("succesfully saved"); 
+        res.send("succesfully saved");
     });
 
-// Comment Routes ----------------------------------------------------------------- 
+// Comment Routes -----------------------------------------------------------------
     // Add a new comment
-    router.post('/api/comments/:post/comments', auth, function(req, res, next) { 
+    router.post('/api/comments/:post/comments', auth, function(req, res, next) {
         var comment = new Comment(req.body);
         comment.post = req.post;
         if(req.post.active && comment.body.length > 1){
-            
+
             // save the new comment
             comment.save(function(err, comment){
                 if(err){ return next(err); }
-        
+
                 req.post.comments.push(comment);
                 req.post.save(function(err, post) {
                 if(err){ return next(err); }
-                
+
                 res.json(comment);
                 });
             });
@@ -324,7 +322,7 @@ router.get('/', function(req, res, next) {
             res.json(comment);
         });
     });
-    // Downvote a Comment 
+    // Downvote a Comment
     router.put('/api/comments/downvote/:comment', auth, function(req, res, next) {
         req.comment.downvote(function(err, comment){
             if (err) { return next(err); }
@@ -348,7 +346,7 @@ router.get('/', function(req, res, next) {
         req.category.addview(function(err, post){
             if (err) { return next(err); }
         });
-        
+
         req.category.populate('posts', function(err, posts) {
             if (err) { return next(err); }
             res.json(posts);
@@ -360,7 +358,7 @@ router.get('/', function(req, res, next) {
         req.categoryslug.addview(function(err, post){
             if (err) { return next(err); }
         });
-        
+
         req.categoryslug.populate('posts', function(err, posts) {
             if (err) { return next(err); }
             res.json(posts);
@@ -401,14 +399,14 @@ router.get('/', function(req, res, next) {
 
 // Comments Routes -----------------------------------------------------------------
     // Add a new comment
-    router.post('/api/comment/:post/comments', auth, function(req, res, next) { 
+    router.post('/api/comment/:post/comments', auth, function(req, res, next) {
     var comment = new Comment(req.body);
     comment.post = req.post;
-    
+
     if(req.post.active && comment.body.length > 1){
         comment.save(function(err, comment){
             if(err){ return next(err); }
-    
+
             req.post.comments.push(comment);
             req.post.save(function(err, post) {
             if(err){ return next(err); }
@@ -456,10 +454,10 @@ router.get('/', function(req, res, next) {
                 res.json(user);
             });
         });
-        
-       
+
+
     });
-    
+
     // Register New User
     router.post('/api/register', function(req, res, next) {
         if(!req.body.username || !req.body.password || !req.body.email || !req.body.confirmpassword || !req.body.fullName){
@@ -470,7 +468,7 @@ router.get('/', function(req, res, next) {
         user.setPassword(req.body.password);
         user.email =  req.body.email;
         user.fullName = req.body.fullName;
-        
+
         Config.findOne( {systemRecordsID : '1'}, function (err, result) {
             if (err) {return next(err)};
             if (!result) {
@@ -479,7 +477,7 @@ router.get('/', function(req, res, next) {
 
                 user.save(function(err){
                     if(err){return next(err)}
-                    
+
                     return res.json({token: user.generateJWT()});
                 });
                 var config = new Config();
@@ -493,7 +491,7 @@ router.get('/', function(req, res, next) {
                 console.log('A new user has been created.');
                 user.save(function(err){
                     if(err){return next(err)}
-                    
+
                     return res.json({token: user.generateJWT()});
                 });
             }
@@ -516,7 +514,7 @@ router.get('/', function(req, res, next) {
             }
         })(req, res, next);
     });
-    
+
     router.get('/*', function(req, res) {
     // AJAX requests are aren't expected to be redirected to the AngularJS app
     if (req.xhr) {
@@ -526,6 +524,5 @@ router.get('/', function(req, res, next) {
     // `sendfile` requires the safe, resolved path to your AngularJS app
     res.render('index', { title: 'Forum Home' });
     });
-    
-//module.exports = router;
 
+//module.exports = router;
